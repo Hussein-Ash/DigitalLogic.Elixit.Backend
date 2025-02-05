@@ -95,9 +95,9 @@ namespace Elixir.Services
             var user = await _dbContext.Users.FirstOrDefaultAsync(x => x.Id == id && x.Deleted != true);
             if (user == null) return (null, "User not found");
 
-            if (user.Email != updateUserForm.UserName) user.Email = updateUserForm.UserName.Trim();
-            if (user.FullName != updateUserForm.FullName) user.FullName = updateUserForm.FullName.TrimEnd();
-            if (user.PhoneNumber != updateUserForm.PhoneNumber) user.PhoneNumber = updateUserForm.PhoneNumber;
+            if (updateUserForm.UserName != null) user.UserName = updateUserForm.UserName.Trim();
+            if (updateUserForm.FullName != null) user.FullName = updateUserForm.FullName.TrimEnd();
+            if (updateUserForm.PhoneNumber != null) user.PhoneNumber = updateUserForm.PhoneNumber;
 
 
 
