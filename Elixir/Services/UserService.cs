@@ -56,7 +56,7 @@ namespace Elixir.Services
 
         public async Task<(AppUser? user, string? error)> DeleteUser(Guid id)
         {
-            var user = await _dbContext.Users.FindAsync(new object[] { id });
+            var user = await _dbContext.Users.FirstOrDefaultAsync(x=>x.Id == id && !x.Deleted);
             if (user == null) return (null, "User not found");
             user.Deleted = true;
             _dbContext.Users.Update(user);
@@ -185,6 +185,9 @@ namespace Elixir.Services
 
         public async Task<(UserDto? user, string? error)> AddAdmin(AdminForm form, Guid id)
         {
+            var existingUser = await _dbContext.Users
+                .FirstOrDefaultAsync(u => u.UserName == form.UserName.Trim() || u.PhoneNumber.Contains(form.PhoneNumber.Trim()));
+            if (existingUser != null) return (null, "User already exists");
             var admin = await _dbContext.Users.FirstOrDefaultAsync(x=>x.Id == id);
             if(admin == null) return(null,"User not found");
             if(form.Role >= admin.Role) return (null,"you are not allowed");
