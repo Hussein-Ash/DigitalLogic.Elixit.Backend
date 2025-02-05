@@ -28,19 +28,23 @@ public class OrderController : BaseController
 
     [Authorize]
     [HttpGet]
-    public async Task<ActionResult<Respons<UserOrdersDto>>> GetAll([FromQuery] OrderFilter filter) => OkPaginated(await _service.GetAll(filter), filter.PageNumber, filter.PageSize);
+    public async Task<ActionResult<Respons<StoreOrdersDto>>> GetAll([FromQuery] OrderFilter filter) => OkPaginated(await _service.GetAll(filter), filter.PageNumber, filter.PageSize);
 
 
     [Authorize]
     [HttpPost]
     public async Task<ActionResult<OrderDto>> Add([FromBody] OrderForm form) => Ok(await _service.Add(form, Id));
 
-    [StoreAuthorize]
-    [HttpPut("store/{id}")]
-    public async Task<ActionResult<OrderDto>> Update(Guid id, [FromBody] OrderUpdate update) => Ok(await _service.Update(id, update));
+    // [StoreAuthorize]
+    // [HttpPut("store-cancel/{id}")]
+    // public async Task<ActionResult<OrderDto>> Update(Guid id, [FromBody] OrderUpdate update) => Ok(await _service.Update(id, update));
 
-    [Authorize(Roles = "User,SuperAdmin")]
-    [HttpPut("{id}")]
+    [Authorize]
+    [HttpPut("admin-cancel/{id}")]
+    public async Task<ActionResult<OrderDto>> Update(Guid id, [FromBody] OrderUpdate update) => Ok(await _service.AdminUpdate(id, update));
+
+    [Authorize]
+    [HttpPut("user-cancel/{id}")]
     public async Task<ActionResult<OrderDto>> UserUpdate(Guid id, [FromBody] OrderUpdate update) => Ok(await _service.UserUpdate(id, update));
 
     [Authorize]

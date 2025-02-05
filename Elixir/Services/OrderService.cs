@@ -18,6 +18,8 @@ public interface IOrderService
     Task<(OrderDto? dto, string? error)> Add(OrderForm form, Guid userId);
 
     Task<(OrderDto? dto, string? error)> Update(Guid id, OrderUpdate update);
+    Task<(OrderDto? dto, string? error)> AdminUpdate(Guid id, OrderUpdate update);
+
 
     Task<(OrderDto? dto, string? error)> UserUpdate(Guid id, OrderUpdate update);
 
@@ -93,11 +95,11 @@ public class OrderService : IOrderService
 
     public async Task<(List<StoreOrdersDto>? dtos, int? totalCount, string? error)> GetAllStoreOrders(OrderFilter filter, Guid storeId)
     {
-        var store = await _context.Stores.FirstOrDefaultAsync(x=>x.Id == storeId);
-        if(store == null) return(null,null,"Store not found");
+        var store = await _context.Stores.FirstOrDefaultAsync(x => x.Id == storeId);
+        if (store == null) return (null, null, "Store not found");
         var query = _context.ProductInOrders
-            .Include(x=>x.Order)
-            .ThenInclude(y=>y.User)
+            .Include(x => x.Order)
+            .ThenInclude(y => y.User)
             .Where(x => !x.Deleted && x.Product.StoreId == storeId)
             .AsQueryable();
 
@@ -112,8 +114,8 @@ public class OrderService : IOrderService
     public async Task<(List<StoreOrdersDto>? dtos, int? totalCount, string? error)> GetAll(OrderFilter filter)
     {
         var query = _context.ProductInOrders
-            .Include(x=>x.Order)
-            .ThenInclude(y=>y.User)
+            .Include(x => x.Order)
+            .ThenInclude(y => y.User)
             .Where(x => !x.Deleted)
             .AsQueryable();
 
@@ -122,7 +124,7 @@ public class OrderService : IOrderService
         var orders = await query.Paginate(filter)
             .ProjectTo<StoreOrdersDto>(_mapper.ConfigurationProvider)
             .ToListAsync();
-            
+
 
         return (orders, totalCount, null);
     }
@@ -188,5 +190,25 @@ public class OrderService : IOrderService
         await _context.SaveChangesAsync();
         return (_mapper.Map<OrderDto>(result), null);
 
+    }
+    public async Task<(OrderDto? dto, string? error)> AdminUpdate(Guid id, OrderUpdate update)
+    {
+
+        var userId = _claim.GetUserId();
+        var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId && !x.Deleted);
+
+        if (user == null)
+            return (null, "User not found");
+
+        var Order = await _context.Orders.FirstOrDefaultAsync(x => x.Id == id && !x.Deleted && x.UserId == userId);
+
+        if (Order == null)
+            return (null, "Order not found");
+        _mapper.Map(update, Order);
+        var result = _context.Orders.Update(Order).Entity;
+        if (result == null)
+            return (null, "Failed to update Order");
+        await _context.SaveChangesAsync();
+        return (_mapper.Map<OrderDto>(result), null);
     }
 }
